@@ -16,62 +16,67 @@ from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 # Create your views here.
 
-@login_required(login_url='sign_in')
-def dashboard(request):
+# Class Based Views
+from django.views.generic import TemplateView, CreateView
+from django.urls import reverse
 
-    user = User.objects.get(pk=request.user.id)
-    wallet = user.budget_set.get(month='8-2021')
+class DashboardView(TemplateView):
+    template_name = 'main/dashboard.html'
     
-    # statistics = BillsPayments.objects.values('month').annotate(total=Sum('amount')).order_by('month')
-    # data = json.dumps(list(statistics), cls=DjangoJSONEncoder)
+    def get_context_data(self, **kwargs):
+        user = User.objects.get(pk=self.request.user.id)
+        wallet = user.budget_set.get(month='8-2021')
 
-    now = timezone.now().strftime('%Y-%m-%d')
-    month_year = timezone.now().strftime('%Y-%m')
-    year = timezone.now().year
+        now = timezone.now().strftime('%Y-%m-%d')
+        month_year = timezone.now().strftime('%Y-%m')
+        year = timezone.now().year
 
-    transactions = user.billspayments_set.filter(expense_date=now)
-    total_monthly_expense = user.billspayments_set.filter(expense_date__istartswith=month_year).aggregate(monthly_total=Sum('amount'))
-    annual_expense = user.billspayments_set.filter(expense_date__istartswith=year).aggregate(annual_total=Sum('amount'))
-    money_left = int(str(wallet)) - total_monthly_expense.get('monthly_total')
+        transactions = user.billspayments_set.filter(expense_date=now)
+        total_monthly_expense = user.billspayments_set.filter(expense_date__istartswith=month_year).aggregate(monthly_total=Sum('amount'))
+        annual_expense = user.billspayments_set.filter(expense_date__istartswith=year).aggregate(annual_total=Sum('amount'))
 
-    category = user.billspayments_set.values('category').filter(expense_date__istartswith=month_year).annotate(total=Sum('amount')).order_by('-total')
-    data = json.dumps(list(category), cls=DjangoJSONEncoder)
+        category = user.billspayments_set.values('category').filter(expense_date__istartswith=month_year).annotate(total=Sum('amount')).order_by('-total')
+        data = json.dumps(list(category), cls=DjangoJSONEncoder)
     
-    all_transactions = user.billspayments_set.filter(expense_date__lte=now)
+        all_transactions = user.billspayments_set.filter(expense_date__lte=now)
 
-    print(all_transactions)
+        context = super(DashboardView, self).get_context_data(**kwargs)
+        context.update({
+            'wallet': wallet,
+            'transactions': transactions,
+            'monthly': total_monthly_expense,
+            'annual': annual_expense,
+            'money_left': int(str(wallet)) - total_monthly_expense.get('monthly_total'),
+            'category': data,
+            'all_transactions': all_transactions
+        })
+        return context
 
-    context = {
-        'title': 'Dashboard', 
-        'wallet': wallet, 
-        'transactions': transactions, 
-        'monthly': total_monthly_expense, 
-        'annual': annual_expense, 
-        'money_left': money_left,
-        'category': data,
-        'all_transactions': all_transactions
-    }
+class SetBudgetCreateView(CreateView):
+    model = Budget
+    form_class = BudgetForm
 
-    return render(request, 'main/dashboard.html', context)
+    def form_valid(self, form):
+        form.instance.user = User.objects.get(pk=self.request.user.id)
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        http_referer = self.request.META.get('HTTP_REFERER').split('/')
+        url = f'main:{http_referer[-2]}'
+        return reverse(url)
 
-@login_required(login_url='sign_in')
-def bills_payments(request):
-    user = User.objects.get(id=request.user.id)
-    bills = user.billspayments_set.all().order_by('-created_at')
-    transactions = user.transactions_set.all().order_by('-created_at')
-    context = {'title': 'Bills & Payments', 'bills': bills, 'transactions': transactions}
-    return render(request, 'main/bills_payments.html', context)
+class AddBillCreateView(CreateView):
+    model = BillsPayments
+    form_class = BillsPaymentsForm
 
-@login_required(login_url='sign_in')
-def add_bill(request):
+    def form_valid(self, form):
+        form.instance.user = User.objects.get(pk=self.request.user.id)
+        return super().form_valid(form)
 
-    if request.method == 'POST':
-        form = BillsPaymentsForm(request.POST)
-        if form.is_valid():
-            form.instance.user_id = request.user.id
-            form.save()
-            messages.success(request, 'Success!')
-            return redirect(request.META.get('HTTP_REFERER'))
+    def get_success_url(self):
+        http_referer = self.request.META.get('HTTP_REFERER').split('/')
+        url = f'main:{http_referer[-2]}'
+        return reverse(url)
          
 
 @login_required(login_url='sign_in')
