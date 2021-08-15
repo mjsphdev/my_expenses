@@ -1,0 +1,22 @@
+{% extends 'main/base.html' %}  
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mt-4">
+      <div class="card">
+        <div class="card-header pb-0 px-3">
+          <h6 class="mb-0">Billing Information</h6>
+        </div>
+        <div class="card-body pt-4 p-3">
+            <form method="POST" action="">
+               {% csrf_token %}
+              {{form.as_p}}
+              <div class="mb-3 float-end">
+                {% url 'add_bill' as url %}
+                <button type="submit" class="btn bg-gradient-dark">{% if request.path == url %}Add{% else %}Update{% endif %} </button>
+              </div>
+            </form>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}

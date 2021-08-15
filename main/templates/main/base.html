@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{% static 'main/img/melogo.png' %}">
+  <link rel="icon" type="image/png" href="{% static 'main/img/melogo.png' %}">
+  <title>My Expenses | {{title}}</title>
+  <!--     Fonts and icons     -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+  <!-- Nucleo Icons -->
+  <link href="{% static 'main/css/nucleo-icons.css' %}" rel="stylesheet" />
+  <link href="{% static 'main/css/nucleo-svg.css' %}" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <link href="{% static 'main/css/nucleo-svg.css' %}" rel="stylesheet" />
+  <!-- CSS Files -->
+  <link id="pagestyle" href="{% static 'main/css/soft-ui-dashboard.css' %}" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
+</head>
+<style>
+  body{
+      width:100%;
+      overflow-x:hidden;
+      overflow-y:hidden;
+  }
+</style>
+<body class="g-sidenav-show  bg-gray-100">
+  {% csrf_token %}
+  {% include 'main/includes/set_budget_modal.html' %}
+  {% include 'main/includes/add_transaction_modal.html' %}
+  {% include 'main/layouts/sidebar.html' %}
+  <main class="main-content position-relative max-height-vh-100 h-100 mt-1 border-radius-lg ">
+    <!-- Navbar -->
+    {% include 'main/layouts/navbar.html' %}
+    <!-- End Navbar -->
+    <div class="container-fluid py-4">
+      <audio id="myAudio">
+        <source src="{% static 'main/effects/soundeffect.mp3' %}" type="audio/mpeg">
+      </audio>
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+  <!--   Core JS Files   -->
+  <script src="{% static 'main/js/core/popper.min.js' %}"></script>
+  <script src="{% static 'main/js/core/bootstrap.min.js' %}"></script>
+  <script src="{% static 'main/js/plugins/perfect-scrollbar.min.js' %}"></script>
+  <script src="{% static 'main/js/plugins/smooth-scrollbar.min.js' %}"></script>
+  <script src="{% static 'main/js/plugins/chartjs.min.js' %}"></script>
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="{% static 'main/js/custom.js' %}"></script>
+  <script>
+    const messages = "{{messages|safe}}"
+    {% if messages %}
+        {% for message in messages %}
+            text = "{{ message|safe }}"
+            Swal.fire({
+              icon: '{{ message.tags }}',
+              title: text,
+            })
+        {% endfor %}
+    {% endif %}
+  </script>
+  <script>
+    let category = JSON.parse('{{category|safe}}')
+    let labels = []
+    let data = []
+    let colors = []
+
+    let categoryColor = {
+      'housing': '#82d616',
+      'insurance': '#8392ab',
+      'food': '#f53939',
+      'savings': '#17c1e8',
+      'transportation': '#252f40',
+      'giving': '#cb0c9f',
+      'personal': '#4834d4',
+      'utilities': '#f0932b',
+      'medical': '#474787',
+      'clothing': '#ff7979',
+      'others': '#f6e58d'
+    }
+
+    category.forEach(element => {
+        category = element.category
+        labels.push(category.toUpperCase())
+        data.push(element.total)
+        colors.push(categoryColor[category])
+    })
+    let cutout = Math.max(...data)
+    console.log(data)
+
+    const dataTableSearch = new simpleDatatables.DataTable("#datatable-search", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 5,
+    });
+
+  // Bar chart
+ // Bar chart horizontal
+ var ctx6 = document.getElementById("bar-chart-horizontal").getContext("2d");
+
+ new Chart(ctx6, {
+   type: "bar",
+   data: {
+     labels: labels,
+     datasets: [{
+       label: "Expense",
+       weight: 5,
+       borderWidth: 0,
+       borderRadius: 4,
+       backgroundColor: '#3A416F',
+       data: data,
+       fill: false
+     }],
+   },
+   options: {
+     indexAxis: 'y',
+     responsive: true,
+     maintainAspectRatio: false,
+     plugins: {
+       legend: {
+         display: false,
+       }
+     },
+     scales: {
+       y: {
+         grid: {
+           drawBorder: false,
+           display: true,
+           drawOnChartArea: true,
+           drawTicks: false,
+           borderDash: [5, 5]
+         },
+         ticks: {
+           display: true,
+           padding: 10,
+           color: '#9ca2b7'
+         }
+       },
+       x: {
+         grid: {
+           drawBorder: false,
+           display: false,
+           drawOnChartArea: true,
+           drawTicks: true,
+         },
+         ticks: {
+           display: true,
+           color: '#9ca2b7',
+           padding: 10
+         }
+       },
+     },
+   },
+ });
+
+  </script>
+  <script>
+    var win = navigator.platform.indexOf('Win') > -1;
+    if (win && document.querySelector('#sidenav-scrollbar')) {
+      var options = {
+        damping: '0.5'
+      }
+      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+    }
+  </script>
+  <!-- Github buttons -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
+  <script src="{% static 'main/js/soft-ui-dashboard.min.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,82 @@
+{% extends 'main/base.html' %}  
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+      <div class="row">
+        <div class="col-md-12 mb-lg-0 mb-4">
+            <a class="btn bg-gradient-dark mb-0" href="{% url 'add_bill' %}"><i class="fas fa-plus" aria-hidden="true"></i>&nbsp;&nbsp;Add Bill</a>
+        </div>
+      </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-7 mt-4">
+      <div class="card">
+        <div class="card-header pb-0 px-3">
+          <h6 class="mb-0">Billing Information</h6>
+        </div>
+        <div class="card-body pt-4 p-3">
+          <ul class="list-group">
+            {% for bill in bills %}
+            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+              <div class="d-flex flex-column">
+                <h6 class="mb-3 text-sm">{{ bill.description }}</h6>
+                <span class="mb-2 text-xs">Category: <span class="text-dark font-weight-bold ms-sm-2">{{ bill.category | title }}</span></span>
+                <span class="mb-2 text-xs">Amount: <span class="text-dark ms-sm-2 font-weight-bold">{{ bill.amount }}</span></span>
+                <span class="text-xs">Created At: <span class="text-dark ms-sm-2 font-weight-bold">{{ bill.created_at | date:'F d, o g:i A'}}</span></span>
+                <span class="text-xs">Updated At: <span class="text-dark ms-sm-2 font-weight-bold">{{ bill.updated_at | date:'F d, o g:i A'}}</span></span>
+              </div>
+              <div class="ms-auto text-end">
+                <a class="btn btn-link text-danger text-gradient px-3 mb-0" href="{% url 'delete_bill' bill.id %}"><i class="far fa-trash-alt me-2" aria-hidden="true"></i>Delete</a>
+                <a class="btn btn-link text-dark px-3 mb-0" href="{% url 'update_bill' bill.id %}"><i class="fas fa-pencil-alt text-dark me-2" aria-hidden="true"></i>Edit</a>
+                <a class="btn btn-link text- px-3 mb-0" href="{% url 'change_status' bill.id %}">
+                  {% if bill.status %}<span class="badge badge-pill badge-lg bg-gradient-success">Completed</span>
+                  {% else %}<span class="badge badge-pill badge-lg bg-gradient-primary">Pending</span>{% endif %}</a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5 mt-4">
+      <div class="card h-100 mb-4">
+        <div class="card-header pb-0 px-3">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="mb-0">Your Transaction's</h6>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-4 p-3">
+          <ul class="list-group">
+            {% for transaction in transactions %}
+            <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
+              <div class="d-flex align-items-center">
+                {% if transaction.transaction_status %}
+                  <button class="btn btn-icon-only btn-rounded btn-outline-danger mb-0 me-3 btn-sm d-flex align-items-center justify-content-center"><i class="fas fa-arrow-down" aria-hidden="true"></i></button>
+                {% else %}
+                <button class="btn btn-icon-only btn-rounded btn-outline-dark mb-0 me-3 btn-sm d-flex align-items-center justify-content-center"><i class="fas fa-exclamation" aria-hidden="true"></i></button>
+                {% endif %}
+                <div class="d-flex flex-column">
+                  <h6 class="mb-1 text-dark text-sm">{{transaction.details}}</h6>
+                  <span class="text-xs">{{transaction.created_at|date:'F d, o'}} at {{transaction.created_at|date:'g:i A'}}</span>
+                </div>
+              </div>
+              {% if transaction.transaction_status %}
+                 <div class="d-flex align-items-center text-danger text-gradient text-sm font-weight-bold">
+                   - ₱ {{transaction.transaction_amount}}
+                 </div>
+              {% else %}
+                 <div class="d-flex align-items-center text-dark text-sm font-weight-bold">
+                   Pending
+                 </div>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
