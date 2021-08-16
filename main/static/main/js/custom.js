@@ -1,3 +1,8 @@
+let modal = new bootstrap.Modal(document.getElementById('createWallet'))
+window.addEventListener('load', (event) => {
+   modal.show()
+})
+
 const voiceAssistant = document.querySelector('#voiceAssistant')
 
 voiceAssistant.addEventListener('click', (event)=>{

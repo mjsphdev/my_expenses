@@ -17,10 +17,29 @@ from django.core.serializers.json import DjangoJSONEncoder
 # Create your views here.
 
 # Class Based Views
-from django.views.generic import TemplateView, CreateView
+from django.views.generic import TemplateView, CreateView, RedirectView
 from django.urls import reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-class DashboardView(TemplateView):
+
+class Redirect(RedirectView):
+    
+    def get_redirect_url(self, *args, **kwargs):
+        user = User.objects.get(pk=self.request.user.id)
+        wallet = user.budget_set.filter(month='8-2021')
+        
+        if wallet:
+            link = 'main:dashboard'
+        else:
+            link = 'main:wallet'
+
+        return reverse(link)
+
+
+class WalletView(TemplateView):
+    template_name = 'main/wallet.html'
+
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'main/dashboard.html'
     
     def get_context_data(self, **kwargs):
