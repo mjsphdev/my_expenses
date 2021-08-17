@@ -1,7 +1,18 @@
 from django.db import models
 from django.db.models.fields import DateField
-from django.forms import ModelForm, DateInput
-from .models import BillsPayments, Budget
+from django.forms import ModelForm, DateInput, TextInput, NumberInput
+from .models import BillsPayments, Budget, Wallet
+
+class WalletForm(ModelForm):
+
+    class Meta:
+        model = Wallet
+        fields = ['wallet_name', 'currency', 'initial_balance']
+        widgets = {
+            'wallet_name': TextInput(attrs={'class': 'form-control'}),
+            'currency': TextInput(attrs={'class': 'form-control'}),
+            'initial_balance': NumberInput(attrs={'class': 'form-control'})
+        }
 
 
 class BillsPaymentsForm(ModelForm):

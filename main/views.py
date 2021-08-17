@@ -17,9 +17,10 @@ from django.core.serializers.json import DjangoJSONEncoder
 # Create your views here.
 
 # Class Based Views
-from django.views.generic import TemplateView, CreateView, RedirectView
+from django.views.generic import TemplateView, CreateView, RedirectView, DetailView
 from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
 
 
 class Redirect(RedirectView):
@@ -34,7 +35,6 @@ class Redirect(RedirectView):
             link = 'main:wallet'
 
         return reverse(link)
-
 
 class WalletView(TemplateView):
     template_name = 'main/wallet.html'
@@ -87,10 +87,6 @@ class SetBudgetCreateView(CreateView):
 class AddBillCreateView(CreateView):
     model = BillsPayments
     form_class = BillsPaymentsForm
-
-    def form_valid(self, form):
-        form.instance.user = User.objects.get(pk=self.request.user.id)
-        return super().form_valid(form)
 
     def get_success_url(self):
         http_referer = self.request.META.get('HTTP_REFERER').split('/')
@@ -204,4 +200,10 @@ def getdata(request):
         result = 'Sorry, I did not get that'
 
     return HttpResponse(result)
+
+def getwallet(request):
+    budget = Budget.objects.all()
+
+    return HttpResponse(budget)
+
 

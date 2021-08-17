@@ -5,6 +5,17 @@ from django.urls import reverse
 
 # Create your models here.
 
+class Wallet(models.Model):
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    wallet_name = models.CharField(max_length=100)
+    currency = models.CharField(max_length=50)
+    initial_balance = models.IntegerField()
+    adjust_balance = models.IntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.wallet_name
 
 class Budget(models.Model):
 

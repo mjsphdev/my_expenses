@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'main.context_processors.wallet',
                 'main.context_processors.set_budget',
                 'main.context_processors.add_transaction',
                 # 'main.context_processors.speech_recognition'
