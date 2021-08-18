@@ -16,62 +16,82 @@ from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 # Create your views here.
 
-@login_required(login_url='sign_in')
-def dashboard(request):
+# Class Based Views
+from django.views.generic import TemplateView, CreateView, RedirectView, DetailView
+from django.urls import reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
 
-    user = User.objects.get(pk=request.user.id)
-    wallet = user.budget_set.get(month='8-2021')
+
+class Redirect(RedirectView):
     
-    # statistics = BillsPayments.objects.values('month').annotate(total=Sum('amount')).order_by('month')
-    # data = json.dumps(list(statistics), cls=DjangoJSONEncoder)
+    def get_redirect_url(self, *args, **kwargs):
+        user = User.objects.get(pk=self.request.user.id)
+        wallet = user.budget_set.filter(month='8-2021')
+        
+        if wallet:
+            link = 'main:dashboard'
+        else:
+            link = 'main:wallet'
 
-    now = timezone.now().strftime('%Y-%m-%d')
-    month_year = timezone.now().strftime('%Y-%m')
-    year = timezone.now().year
+        return reverse(link)
 
-    transactions = user.billspayments_set.filter(expense_date=now)
-    total_monthly_expense = user.billspayments_set.filter(expense_date__istartswith=month_year).aggregate(monthly_total=Sum('amount'))
-    annual_expense = user.billspayments_set.filter(expense_date__istartswith=year).aggregate(annual_total=Sum('amount'))
-    money_left = int(str(wallet)) - total_monthly_expense.get('monthly_total')
+class WalletView(TemplateView):
+    template_name = 'main/wallet.html'
 
-    category = user.billspayments_set.values('category').filter(expense_date__istartswith=month_year).annotate(total=Sum('amount')).order_by('-total')
-    data = json.dumps(list(category), cls=DjangoJSONEncoder)
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'main/dashboard.html'
     
-    all_transactions = user.billspayments_set.filter(expense_date__lte=now)
+    def get_context_data(self, **kwargs):
+        user = User.objects.get(pk=self.request.user.id)
+        wallet = user.budget_set.get(month='8-2021')
 
-    print(all_transactions)
+        now = timezone.now().strftime('%Y-%m-%d')
+        month_year = timezone.now().strftime('%Y-%m')
+        year = timezone.now().year
 
-    context = {
-        'title': 'Dashboard', 
-        'wallet': wallet, 
-        'transactions': transactions, 
-        'monthly': total_monthly_expense, 
-        'annual': annual_expense, 
-        'money_left': money_left,
-        'category': data,
-        'all_transactions': all_transactions
-    }
+        transactions = user.billspayments_set.filter(expense_date=now)
+        total_monthly_expense = user.billspayments_set.filter(expense_date__istartswith=month_year).aggregate(monthly_total=Sum('amount'))
+        annual_expense = user.billspayments_set.filter(expense_date__istartswith=year).aggregate(annual_total=Sum('amount'))
 
-    return render(request, 'main/dashboard.html', context)
+        category = user.billspayments_set.values('category').filter(expense_date__istartswith=month_year).annotate(total=Sum('amount')).order_by('-total')
+        data = json.dumps(list(category), cls=DjangoJSONEncoder)
+    
+        all_transactions = user.billspayments_set.filter(expense_date__lte=now)
 
-@login_required(login_url='sign_in')
-def bills_payments(request):
-    user = User.objects.get(id=request.user.id)
-    bills = user.billspayments_set.all().order_by('-created_at')
-    transactions = user.transactions_set.all().order_by('-created_at')
-    context = {'title': 'Bills & Payments', 'bills': bills, 'transactions': transactions}
-    return render(request, 'main/bills_payments.html', context)
+        context = super(DashboardView, self).get_context_data(**kwargs)
+        context.update({
+            'wallet': wallet,
+            'transactions': transactions,
+            'monthly': total_monthly_expense,
+            'annual': annual_expense,
+            'money_left': int(str(wallet)) - total_monthly_expense.get('monthly_total'),
+            'category': data,
+            'all_transactions': all_transactions
+        })
+        return context
 
-@login_required(login_url='sign_in')
-def add_bill(request):
+class SetBudgetCreateView(CreateView):
+    model = Budget
+    form_class = BudgetForm
 
-    if request.method == 'POST':
-        form = BillsPaymentsForm(request.POST)
-        if form.is_valid():
-            form.instance.user_id = request.user.id
-            form.save()
-            messages.success(request, 'Success!')
-            return redirect(request.META.get('HTTP_REFERER'))
+    def form_valid(self, form):
+        form.instance.user = User.objects.get(pk=self.request.user.id)
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        http_referer = self.request.META.get('HTTP_REFERER').split('/')
+        url = f'main:{http_referer[-2]}'
+        return reverse(url)
+
+class AddBillCreateView(CreateView):
+    model = BillsPayments
+    form_class = BillsPaymentsForm
+
+    def get_success_url(self):
+        http_referer = self.request.META.get('HTTP_REFERER').split('/')
+        url = f'main:{http_referer[-2]}'
+        return reverse(url)
          
 
 @login_required(login_url='sign_in')
@@ -180,4 +200,10 @@ def getdata(request):
         result = 'Sorry, I did not get that'
 
     return HttpResponse(result)
+
+def getwallet(request):
+    budget = Budget.objects.all()
+
+    return HttpResponse(budget)
+
 

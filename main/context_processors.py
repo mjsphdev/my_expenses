@@ -1,4 +1,4 @@
-from main.forms import BudgetForm, BillsPaymentsForm
+from main.forms import BudgetForm, BillsPaymentsForm, WalletForm
 import speech_recognition as sr
 import pyttsx3
 from main.models import Budget, BillsPayments
@@ -12,6 +12,12 @@ voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id)
 engine.setProperty('rate', 145)
 
+def wallet(request):
+    wallet_form = WalletForm()
+
+    return {'wallet_form': wallet_form}
+
+    
 def set_budget(request):
     budget_form = BudgetForm()
 

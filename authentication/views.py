@@ -5,7 +5,13 @@ from django.contrib.auth import authenticate, login, logout
 
 from django.contrib import messages
 
+from django.contrib.auth.views import LoginView
 # Create your views here.
+
+class SignIn(LoginView):
+    template_name = 'authentication/sign_in.html'
+    redirect_authenticated_user = True
+    success_url = '/dashboard/'
 
 def sign_in(request):
     if request.user.is_authenticated:

@@ -1,3 +1,16 @@
+let modal = new bootstrap.Modal(document.getElementById('createWallet'), {backdrop: 'static', keyboard: false})
+window.addEventListener('load', (event) => {
+  $.ajax({
+    type: 'GET',
+    url: '/get-wallet/',
+    success: function(data){
+      if(!data){
+        modal.show()
+      }
+    }
+  })
+})
+
 const voiceAssistant = document.querySelector('#voiceAssistant')
 
 voiceAssistant.addEventListener('click', (event)=>{
@@ -55,4 +68,53 @@ voiceAssistant.addEventListener('click', (event)=>{
             // code to handle error
         }
 
+})
+
+
+let currency = countries
+let row = document.querySelector('#currency')
+
+currency.forEach(c => {
+  let text = ` ${c.currency.name}  ${c.currency.code} - ${c.currency.symbol}`
+  let div = document.createElement('div')
+  let spanNameDiv = document.createElement('div')
+  let span = document.createElement('span')
+  let textNode = document.createTextNode(text)
+  let img = document.createElement('img')
+  let spanRow = document.createElement('row')
+  let spanDiv = document.createElement('div')
+  div.className = 'col-md-6 mt-3'
+  div.id = `cc_${c.currency.code}`
+  span.className = 'text-input'
+  img.src = `data:image/png;base64, ${c.flag}`
+  span.appendChild(textNode)
+  spanDiv.appendChild(img)
+  spanDiv.appendChild(span)
+  spanRow.appendChild(spanDiv)
+  div.appendChild(spanRow)
+  div.setAttribute('data-value', c.currency.code)
+  div.addEventListener("mouseover", function( event ) {
+    // highlight the mouseover target
+    event.target.style.cursor = "pointer"
+    event.target.style.backgroundColor = "#dff9fb";
+  
+    // reset the color after a short delay
+    div.addEventListener("mouseleave", function() {
+      event.target.style.backgroundColor = "";
+    }, false);
+  }, false);
+
+  row.appendChild(div)
+})
+let currencyModal = new bootstrap.Modal(document.getElementById('currencyModal'))
+let id_currency = document.querySelector('#id_currency')
+id_currency.addEventListener('click', function() {
+  currencyModal.show()
+})
+
+let currencyCode = document.querySelectorAll("div[id^='cc_']")
+currencyCode.forEach(div => {
+  div.addEventListener('click', function() {
+    id_currency.value = div.getAttribute('data-value')
+  })
 })

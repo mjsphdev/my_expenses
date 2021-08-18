@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'main.context_processors.wallet',
                 'main.context_processors.set_budget',
                 'main.context_processors.add_transaction',
                 # 'main.context_processors.speech_recognition'
@@ -133,3 +134,6 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/sign_in/'
+LOGIN_REDIRECT_URL = '/redirect/'
