@@ -9,6 +9,7 @@ class Wallet(models.Model):
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     wallet_name = models.CharField(max_length=100)
     currency = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=11, null=True)
     initial_balance = models.IntegerField()
     adjust_balance = models.IntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)

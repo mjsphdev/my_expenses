@@ -74,7 +74,14 @@ voiceAssistant.addEventListener('click', (event)=>{
 let currency = countries
 let row = document.querySelector('#currency')
 
-currency.forEach(c => {
+let search_input = document.getElementById('search');
+
+let search_term = '';
+
+const showCountries = () => {
+  row.innerHTML = ''
+  currency.filter(c => c.name.toLowerCase().includes(search_term.toLocaleLowerCase())
+  ).forEach(c => {
   let text = ` ${c.currency.name}  ${c.currency.code} - ${c.currency.symbol}`
   let div = document.createElement('div')
   let spanNameDiv = document.createElement('div')
@@ -92,7 +99,7 @@ currency.forEach(c => {
   spanDiv.appendChild(span)
   spanRow.appendChild(spanDiv)
   div.appendChild(spanRow)
-  div.setAttribute('data-value', c.currency.code)
+  div.setAttribute('data-value', `${c.currency.code}-${c.currency.symbol}`)
   div.addEventListener("mouseover", function( event ) {
     // highlight the mouseover target
     event.target.style.cursor = "pointer"
@@ -106,15 +113,71 @@ currency.forEach(c => {
 
   row.appendChild(div)
 })
+}
+
 let currencyModal = new bootstrap.Modal(document.getElementById('currencyModal'))
 let id_currency = document.querySelector('#id_currency')
 id_currency.addEventListener('click', function() {
+  search_input.value = ''
   currencyModal.show()
+  search_term = ''
+  showCountries(); 
+  currencyCodeValue();
 })
 
-let currencyCode = document.querySelectorAll("div[id^='cc_']")
-currencyCode.forEach(div => {
+
+const showCountriesFilter = () => {search_input.addEventListener('keyup', e => {
+    search_term = e.target.value
+    showCountries(); 
+    currencyCodeValue();
+});
+}
+showCountriesFilter()
+
+//Getting Currency Value
+const currencyCodeValue = () => {
+  let currencyCode = document.querySelectorAll("div[id^='cc_']");
+  currencyCode.forEach(div => {
   div.addEventListener('click', function() {
     id_currency.value = div.getAttribute('data-value')
+    currencyModal.hide()
   })
 })
+}
+
+
+const walletId = document.getElementById('walletId')
+const wallet = document.querySelectorAll('[id^="walletSubmit"]')
+wallet.forEach(w => {
+  w.addEventListener('click', function(e){
+    e.preventDefault();
+  let csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value
+  let id =  w.getAttribute('data-value')
+  console.log(id)
+  $.ajax({
+    type:'POST',
+    url: walletId.getAttribute('action'),
+    data: {
+       id: id,
+       csrfmiddlewaretoken: csrf_token
+      },
+    success: function(data){
+        const walletDetails = document.querySelector('#walletDetails')
+        walletDetails.innerHTML=''
+        let details = JSON.parse(data)
+        details.forEach(detail => {
+           let tr = document.createElement('tr')
+           let td = document.createElement('td')
+           td.innerHTML = `<h4>${detail.fields.wallet_name}</h4>
+                          <small class="font-weight-bold">${detail.fields.currency}</small>
+                          `
+           tr.appendChild(td)
+           walletDetails.appendChild(tr)
+        })
+        
+    }
+   })
+  })
+})
+
+

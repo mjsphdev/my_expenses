@@ -7,27 +7,30 @@ from django.http import HttpResponseRedirect
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .forms import BillsPaymentsForm, BudgetForm
-from .models import BillsPayments, Transactions, Budget
+from django.views.generic.edit import UpdateView
+from .forms import BillsPaymentsForm, BudgetForm, WalletForm
+from .models import BillsPayments, Transactions, Budget, Wallet
 from django.db.models import Sum
 
 from django.contrib import messages
 from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core import serializers
 # Create your views here.
 
 # Class Based Views
-from django.views.generic import TemplateView, CreateView, RedirectView, DetailView
+from django.views.generic import TemplateView, ListView, CreateView, RedirectView, DetailView
 from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 
 class Redirect(RedirectView):
     
-    def get_redirect_url(self, *args, **kwargs):
+    def get_redirect_url(self):
         user = User.objects.get(pk=self.request.user.id)
-        wallet = user.budget_set.filter(month='8-2021')
+        wallet = user.wallet_set.all()
         
         if wallet:
             link = 'main:dashboard'
@@ -36,12 +39,32 @@ class Redirect(RedirectView):
 
         return reverse(link)
 
-class WalletView(TemplateView):
-    template_name = 'main/wallet.html'
+class WalletView(ListView):
 
-class DashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'main/dashboard.html'
+    template_name = 'main/wallet.html'
+    model = Wallet
+    context_object_name = 'wallets'
+
+class CreateWallet(CreateView):
+    model = Wallet
+    form_class = WalletForm
+    success_url = '/my-wallet/'
     
+    def form_valid(self, form):
+        symbol = form.instance.currency.split('-')[-1]
+        currency = form.instance.currency.split('-')[0]
+        form.instance.user = User.objects.get(pk=self.request.user.id)
+        form.instance.currency = currency
+        form.instance.symbol = symbol
+        return super().form_valid(form)
+
+class UpdateWallet(UpdateView):
+    pass
+
+class DashboardView(LoginRequiredMixin, TemplateView, Redirect):
+    template_name = 'main/dashboard.html'
+
+
     def get_context_data(self, **kwargs):
         user = User.objects.get(pk=self.request.user.id)
         wallet = user.budget_set.get(month='8-2021')
@@ -70,7 +93,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'all_transactions': all_transactions
         })
         return context
-
+    
 class SetBudgetCreateView(CreateView):
     model = Budget
     form_class = BudgetForm
@@ -202,8 +225,16 @@ def getdata(request):
     return HttpResponse(result)
 
 def getwallet(request):
-    budget = Budget.objects.all()
+    wallet = Wallet.objects.all()
 
-    return HttpResponse(budget)
+    return HttpResponse(wallet)
+
+def getwalletdetail(request):
+    if request.is_ajax:
+        wallet_id = request.POST.get('id')
+        detail = Wallet.objects.get(pk=wallet_id)
+        serialized = serializers.serialize('json', [detail, ])
+
+    return JsonResponse(serialized, safe=False)
 
 
