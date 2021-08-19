@@ -5,6 +5,43 @@
     max-height:400px; 
     overflow-y: auto;
 }
+
+.line {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  background-color: #4b9cdb;
+}
+
+.load-3 .line:nth-last-child(1) {
+  animation: loadingC 0.6s 0.1s linear infinite;
+}
+.load-3 .line:nth-last-child(2) {
+  animation: loadingC 0.6s 0.2s linear infinite;
+}
+.load-3 .line:nth-last-child(3) {
+  animation: loadingC 0.6s 0.3s linear infinite;
+}
+
+.l-3 {
+  animation-delay: 0.72s;
+}
+
+@keyframes loadingC {
+  0 {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(0, 15px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+
+
 </style>
 <div class="modal fade" id="createWallet" tabindex="-1" role="dialog" aria-labelledby="createWalletLabel" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -28,9 +65,6 @@
     </div>
 </div>
 
-<button type="button" class="btn bg-gradient-primary" data-bs-toggle="modal" data-bs-target="#createWallet">
-  Create
-</button>
 
 <div class="modal fade" id="currencyModal" tabindex="-1" role="dialog" aria-labelledby="currencyModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -58,6 +92,9 @@
       <div class="card-header pb-0 p-3">
         <div class="d-flex justify-content-between">
           <h6 class="mb-2">Wallets</h6>
+          <button type="button" class="btn bg-gradient-dark" data-bs-toggle="modal" data-bs-target="#createWallet">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
       </div>
       <div class="table-responsive">
@@ -66,7 +103,7 @@
             <tr>
               <th class="text-center text-sm font-weight-bolder">Name</th>
               <th class="text-center text-sm font-weight-bolder">Current Balance</th>
-              <th class="text-center text-sm font-weight-bolder">View</th>
+              <th class="text-center text-sm font-weight-bolder"></th>
             </tr>
           </thead>
           <tbody>
@@ -79,7 +116,15 @@
               <td class="align-middle text-center text-sm">{{wallet.wallet_name}}</td>
               <td class="align-middle text-center text-sm">{{wallet.symbol}} {{wallet.initial_balance}}</td>
               <td>
-                <button type="submit" id="walletSubmit_{{wallet.id}}" data-value={{wallet.id}} class="btn btn-info mt-3">
+                <div class="text-center" id="loaderFreeze_{{wallet.id}}" style="display: none;">
+                  <div class="load-3">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                  </div>
+                </div>
+                <button type="submit" id="walletSubmit_{{wallet.id}}" data-value={{wallet.id}} 
+                  class="btn mt-3 {{ wallet.freeze|yesno:"btn-secondary,btn-outline-success" }}">
                   <span class="btn-inner--icon"><i class="fas fa-eye"></i></span>
                 </button>
               </td>
@@ -94,17 +139,16 @@
   </div>
   <div class="col-md-8">
     <div class="card">
-      <div class="card-header pb-0 p-3">
-        <div class="d-flex justify-content-between">
-          <h6 class="mb-2">Wallet Details</h6>
-        </div>
-      </div>
       <div class="card-body">
-        <table class="table align-items-center ">
-          <tbody id="walletDetails">
-           
-          </tbody>
-        </table>
+          <div id="walletDetails" class="mb-0">
+          </div>
+          <div class="text-center" id="loader">
+            <div class="load-3">
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+            </div>
+          </div>
       </div>
     </div>
   </div>

@@ -19,7 +19,7 @@ from django.core import serializers
 # Create your views here.
 
 # Class Based Views
-from django.views.generic import TemplateView, ListView, CreateView, RedirectView, DetailView
+from django.views.generic import TemplateView, ListView, CreateView, RedirectView, DetailView, detail
 from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
@@ -44,6 +44,7 @@ class WalletView(ListView):
     template_name = 'main/wallet.html'
     model = Wallet
     context_object_name = 'wallets'
+    ordering = 'created_at'
 
 class CreateWallet(CreateView):
     model = Wallet
@@ -225,9 +226,10 @@ def getdata(request):
     return HttpResponse(result)
 
 def getwallet(request):
-    wallet = Wallet.objects.all()
+    wallet = Wallet.objects.filter(freeze=False).first()
+    serialized = serializers.serialize('json',[wallet, ])
 
-    return HttpResponse(wallet)
+    return HttpResponse(serialized)
 
 def getwalletdetail(request):
     if request.is_ajax:
@@ -237,4 +239,18 @@ def getwalletdetail(request):
 
     return JsonResponse(serialized, safe=False)
 
+def freeze_wallet(request):
+    if request.is_ajax:
+        wallet = Wallet.objects.get(pk=request.POST.get('id'))
+        wallet.freeze = request.POST.get('freeze').title()
+        wallet.save()
+
+    return HttpResponse('Updated')
+
+def delete_wallet(request):
+    if request.is_ajax:
+        wallet = Wallet.objects.get(pk=request.POST.get('id'))
+        wallet.delete()
+
+    return HttpResponse('Deleted')
 

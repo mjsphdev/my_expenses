@@ -12,6 +12,7 @@ class Wallet(models.Model):
     symbol = models.CharField(max_length=11, null=True)
     initial_balance = models.IntegerField()
     adjust_balance = models.IntegerField(null=True)
+    freeze = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
